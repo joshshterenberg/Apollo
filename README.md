@@ -1,7 +1,6 @@
-# Apollo: A Powerful, Object-Oriented, Lighthearted Language Option
-### Written by Joshua Shterenberg
-
-## Overview and How to Build
+# Apollo: A Powerful, Lighthearted Language Option
+#### Written by Joshua Shterenberg
+### &#9728;Overview and How to Build
 
 Apollo is the brainchild of a week's worth of boredom, too much coffee,
 and a bored computer programmer during a college winter intersession.
@@ -30,7 +29,7 @@ MyTerminal$ python3 shell.py
 30
 ```
 
-## Research and Sources
+## &#9728;Research and Sources
 
 This project made use of the following external resources:
 * [Source 1](https://youtube.com/playlist?list=PLZQftyCk7_SdoVexSmwy_tBgs7P0b97yD)
