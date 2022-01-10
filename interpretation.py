@@ -80,6 +80,41 @@ class Number:
         if isinstance(other, Number):
             return Number(self.value ** other.value).set_context(self.context), None
 
+    def get_comparison_eq(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value == other.value)).set_context(self.context), None
+
+    def get_comparison_ne(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value != other.value)).set_context(self.context), None
+
+    def get_comparison_lt(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value < other.value)).set_context(self.context), None
+
+    def get_comparison_gt(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value > other.value)).set_context(self.context), None
+
+    def get_comparison_lte(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value <= other.value)).set_context(self.context), None
+
+    def get_comparison_gte(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value >= other.value)).set_context(self.context), None
+
+    def anded_by(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value and other.value)).set_context(self.context), None
+
+    def ored_by(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value or other.value)).set_context(self.context), None
+
+    def notted(self):
+        return Number(1 if self.value == 0 else 0).set_context(self.context), None
+
     def copy(self):
         copy = Number(self.value)
         copy.set_pos(self.pos_start, self.pos_end)
@@ -137,6 +172,23 @@ class Interpreter:
             result, error = left.div_by(right)
         elif node.op_tok.type == constants.TT_POW:
             result, error = left.pow_by(right)
+        elif node.op_tok.type == constants.TT_EE:
+            result, error = left.get_comparison_eq(right)
+        elif node.op_tok.type == constants.TT_NE:
+            result, error = left.get_comparison_ne(right)
+        elif node.op_tok.type == constants.TT_LT:
+            result, error = left.get_comparison_lt(right)
+        elif node.op_tok.type == constants.TT_GT:
+            result, error = left.get_comparison_gt(right)
+        elif node.op_tok.type == constants.TT_LTE:
+            result, error = left.get_comparison_lte(right)
+        elif node.op_tok.type == constants.TT_GTE:
+            result, error = left.get_comparison_gte(right)
+        elif node.op_tok.matches(constants.TT_KEYWORD, 'AND'):
+            result, error = left.anded_by(right)
+        elif node.op_tok.matches(constants.TT_KEYWORD, 'OR'):
+            result, error = left.ored_by(right)
+
 
         if error: return res.failure(error)
         else: return res.success(result.set_pos(node.pos_start, node.pos_end))
@@ -148,5 +200,7 @@ class Interpreter:
         error = None
         if node.op_tok.type == constants.TT_MINUS:
             number, error = number.mul_by(Number(-1))
+        elif node.op_tok.matches(constants.TT_KEYWORD, 'NOT'):
+            number, error = number.notted()
         if error: return res.failure(error)
         else: return res.success(number.set_pos(node.pos_start, node.pos_end))

@@ -141,6 +141,25 @@ class Parser:
 	def term(self):
 		return self.bin_op(self.factor, (constants.TT_MUL, constants.TT_DIV))
 
+	def arith_expr(self):
+		return self.bin_op(self.term, (constants.TT_PLUS, constants.TT_MINUS))
+
+	def comp_expr(self):
+		res = ParseResult()
+		if self.current_tok.matches(constants.TT_KEYWORD, "NOT"):
+			op_tok = self.current_tok
+			res.register_advancement()
+			self.advance()
+			node = res.register(self.comp_expr())
+			if res.error: return res
+			return res.success(UnaryOpNode(op_tok, node))
+		node = res.register(self.bin_op(self.arith_expr, (constants.TT_EE, constants.TT_NE, constants.TT_LT, constants.TT_GT, constants.TT_LTE, constants.TT_GTE)))
+		if res.error: return res.failure(InvalidSyntaxError(
+			tok.pos_start, tok.pos_end,
+			"Expected int, float, identifier, '+', '-', '(', or '!'"
+		))
+		return res.success(node)
+
 	def expr(self):
 		res = ParseResult()
 		if self.current_tok.matches(constants.TT_KEYWORD, 'VAR'):
@@ -164,10 +183,10 @@ class Parser:
 			expr = res.register(self.expr())
 			if res.error: return res
 			return res.success(VarAssignNode(var_name, expr))
-		node = res.register(self.bin_op(self.term, (constants.TT_PLUS, constants.TT_MINUS)))
+		node = res.register(self.bin_op(self.comp_expr, ((constants.TT_KEYWORD, "AND"), (constants.TT_KEYWORD, "OR"))))
 		if res.error: return res.failure(InvalidSyntaxError(
 			self.current_tok.pos_start, self.current_tok.pos_end,
-			"Expected 'VAR', int, float, identifier, '+', '-', or '('"
+			"Expected 'VAR', int, float, identifier, '+', '-', '(', or '!'"
 		))
 		return res.success(node)
 
@@ -176,7 +195,7 @@ class Parser:
 		res = ParseResult()
 		left = res.register(func_a())
 		if res.error: return res
-		while self.current_tok.type in ops:
+		while self.current_tok.type in ops or (self.current_tok.type, self.current_tok.value) in ops:
 			op_tok = self.current_tok
 			res.register_advancement()
 			self.advance()
