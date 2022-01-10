@@ -1,20 +1,11 @@
 from errors import *
 from position import *
-from token import *
 from lexing import *
 from parsing import *
 from interpretation import *
 
-DIGITS = '0123456789'
-TT_INT = 'INT'
-TT_FLOAT = 'FLOAT'
-TT_PLUS = 'PLUS'
-TT_MINUS = 'MINUS'
-TT_MUL = 'MUL'
-TT_DIV = 'DIV'
-TT_LPAREN = 'LPAREN'
-TT_RPAREN = 'RPAREN'
-TT_EOF = 'EOF'
+global_symbol_table = SymbolTable()
+global_symbol_table.set("null", Number(0))
 
 def run(fn, text): # go go go
 	# lex
@@ -29,6 +20,8 @@ def run(fn, text): # go go go
 
 	# interpret
 	interpreter = Interpreter()
-	interpreter.visit(ast.node)
+	context = Context('<program>')
+	context.symbol_table = global_symbol_table
+	result = interpreter.visit(ast.node, context)
 
-	return result, None
+	return result.value, result.error
