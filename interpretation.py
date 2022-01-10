@@ -115,6 +115,9 @@ class Number:
     def notted(self):
         return Number(1 if self.value == 0 else 0).set_context(self.context), None
 
+    def is_true(self):
+        return self.value != 0
+
     def copy(self):
         copy = Number(self.value)
         copy.set_pos(self.pos_start, self.pos_end)
@@ -204,3 +207,18 @@ class Interpreter:
             number, error = number.notted()
         if error: return res.failure(error)
         else: return res.success(number.set_pos(node.pos_start, node.pos_end))
+
+    def visit_IfNode(self, node, context):
+        res = RTResult()
+        for condition, expr in node.cases:
+            condition_value = res.register(self.visit(condition, context))
+            if res.error: return res
+            if condition_value.is_true():
+                expr_value = res.register(self.visit(expr, context))
+                if res.error: return res
+                return res.success(expr_value)
+        if node.else_case:
+            else_value = res.register(self.visit(node.else_case, context))
+            if res.error return res
+            return res.success(else_value)
+        return res.success(None)
