@@ -11,7 +11,7 @@ class Token:
 			self.pos_end = pos_start.copy()
 			self.pos_end.advance()
 		if pos_end:
-			self.pos_end = pos_end
+			self.pos_end = pos_end.copy()
 	def matches(self, type_, value):
 		return self.type == type_ and self.value == value
 	def __repr__(self): # for nice printing
@@ -45,8 +45,7 @@ class Lexer:
 				tokens.append(Token(constants.TT_PLUS, pos_start = self.pos))
 				self.advance()
 			elif self.current_char == "-":
-				tokens.append(Token(constants.TT_MINUS, pos_start = self.pos))
-				self.advance()
+				tokens.append(self.make_minus_or_arrow())
 			elif self.current_char == "*":
 				tokens.append(Token(constants.TT_MUL, pos_start = self.pos))
 				self.advance()
@@ -72,6 +71,9 @@ class Lexer:
 				tokens.append(self.make_less_than())
 			elif self.current_char == ">":
 				tokens.append(self.make_greater_than())
+			elif self.current_char == ",":
+				tokens.append(Token(constants.TT_COMMA, pos_start = self.pos))
+				self.advance()
 			else: # bad character
 				pos_start = self.pos.copy()
 				char = self.current_char
@@ -88,9 +90,7 @@ class Lexer:
 			if self.current_char == '.':
 				if dot_count == 1: break
 				dot_count += 1
-				num_str += '.'
-			else:
-				num_str += self.current_char
+			num_str += self.current_char
 			self.advance()
 		if dot_count == 0:
 			return Token(constants.TT_INT, int(num_str), pos_start, self.pos)
@@ -140,4 +140,13 @@ class Lexer:
 		if self.current_char == '=':
 			self.advance()
 			tok_type = constants.TT_GTE
+		return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
+
+	def make_minus_or_arrow(self):
+		tok_type = constants.TT_MINUS
+		pos_start = self.pos.copy()
+		self.advance()
+		if self.current_char == '>':
+			self.advance()
+			tok_type = constants.TT_ARROW
 		return Token(tok_type, pos_start=pos_start, pos_end=self.pos)

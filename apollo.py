@@ -1,6 +1,7 @@
 from errors import *
 from position import *
 from lexing import *
+from nodes import *
 from parsing import *
 from interpretation import *
 

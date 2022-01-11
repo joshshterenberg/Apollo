@@ -1,5 +1,7 @@
 from parsing import *
 from errors import *
+from nodes import *
+from values import *
 import constants
 
 ### runtime results ###
@@ -16,116 +18,6 @@ class RTResult:
     def failure(self, error):
         self.error = error
         return self
-
-### context errors ###
-class Context:
-    def __init__(self, display_name, parent=None, parent_entry_pos=None):
-        self.display_name = display_name
-        self.parent = parent
-        self.parent_entry_pos = parent_entry_pos
-        self.symbol_table = None
-
-class SymbolTable:
-    def __init__(self):
-        self.symbols = {}
-        self.parent = None
-    def get(self, name):
-        value = self.symbols.get(name, None)
-        if value == None and self.parent:
-            return self.parent.get(name)
-        return value
-    def set(self, name, value):
-        self.symbols[name] = value
-    def remove(self, name):
-        del self.symbols[name]
-
-class Number:
-    def __init__(self, value):
-        self.value = value
-        self.set_pos()
-        self.set_context()
-
-    def set_pos(self, pos_start=None, pos_end=None):
-        self.pos_start = pos_start
-        self.pos_end = pos_end
-        return self
-
-    def set_context(self, context=None):
-        self.context = context
-        return self
-
-    def added_to(self, other):
-        if isinstance(other, Number):
-            return Number(self.value + other.value).set_context(self.context), None
-
-    def subbed_by(self, other):
-        if isinstance(other, Number):
-            return Number(self.value - other.value).set_context(self.context), None
-
-    def mul_by(self, other):
-        if isinstance(other, Number):
-            return Number(self.value * other.value).set_context(self.context), None
-
-    def div_by(self, other):
-        if isinstance(other, Number):
-            if other.value == 0:
-                return None, RTError(
-                    other.pos_start, other.pos_end,
-                    'Division by 0',
-                    self.context
-                )
-            return Number(self.value / other.value).set_context(self.context), None
-
-    def pow_by(self, other):
-        if isinstance(other, Number):
-            return Number(self.value ** other.value).set_context(self.context), None
-
-    def get_comparison_eq(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value == other.value)).set_context(self.context), None
-
-    def get_comparison_ne(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value != other.value)).set_context(self.context), None
-
-    def get_comparison_lt(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value < other.value)).set_context(self.context), None
-
-    def get_comparison_gt(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value > other.value)).set_context(self.context), None
-
-    def get_comparison_lte(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value <= other.value)).set_context(self.context), None
-
-    def get_comparison_gte(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value >= other.value)).set_context(self.context), None
-
-    def anded_by(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value and other.value)).set_context(self.context), None
-
-    def ored_by(self, other):
-        if isinstance(other, Number):
-            return Number(int(self.value or other.value)).set_context(self.context), None
-
-    def notted(self):
-        return Number(1 if self.value == 0 else 0).set_context(self.context), None
-
-    def is_true(self):
-        return self.value != 0
-
-    def copy(self):
-        copy = Number(self.value)
-        copy.set_pos(self.pos_start, self.pos_end)
-        copy.set_context(self.context)
-        return copy
-
-    def __repr__(self):
-        return str(self.value)
 
 class Interpreter:
     def visit(self, node, context):
@@ -219,6 +111,35 @@ class Interpreter:
                 return res.success(expr_value)
         if node.else_case:
             else_value = res.register(self.visit(node.else_case, context))
-            if res.error return res
+            if res.error: return res
             return res.success(else_value)
+        return res.success(None)
+
+    def visit_ForNode(self, node, context):
+        res = RTResult()
+        start_value = res.register(self.visit(node.start_value_node, context))
+        if res.error: return res
+        end_value = res.register(self.visit(node.end_value_node, context))
+        if res.error: return res
+        if node.step_value_node:
+            step_value = res.register(self.visit(node.step_value_node, context))
+            if res.error: return res
+        else: step_value = Number(1)
+        i = start_value.value
+        condition = (lambda: i < end_value.value) if step_value.value >= 0 else (lambda: i > end_value.value)
+        while condition():
+            context.symbol_table.set(node.var_name_tok.value, Number(i))
+            i += step_value.value
+            res.register(self.visit(node.body_node, context))
+            if res.error: return res
+        return res.success(None)
+
+    def visit_WhileNode(self, node, context):
+        res = RTResult()
+        while True:
+            condition = res.register(self.visit(node.condition_node, context))
+            if res.error: return res
+            if not condition.is_true(): break
+            res.register(self.visit(node.body_node, context))
+            if res.error: return res
         return res.success(None)

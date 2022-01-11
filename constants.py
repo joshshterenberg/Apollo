@@ -1,7 +1,7 @@
-import string
+
 
 DIGITS = '0123456789'
-LETTERS = string.ascii_letters
+LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LETTERS_DIGITS = LETTERS + DIGITS
 TT_INT = 'INT'
 TT_FLOAT = 'FLOAT'
@@ -21,6 +21,8 @@ TT_LT = 'LT'
 TT_GT = 'GT'
 TT_LTE = 'LTE'
 TT_GTE = 'GTE'
+TT_COMMA = 'COMMA'
+TT_ARROW = 'ARROW'
 TT_EOF = 'EOF'
 KEYWORDS = [
 	'VAR',
@@ -30,5 +32,10 @@ KEYWORDS = [
 	'IF',
 	'THEN',
 	'ELIF',
-	'ELSE'
+	'ELSE',
+	'FOR',
+	'TO',
+	'STEP',
+	'WHILE',
+	'FUN'
 ]
