@@ -16,11 +16,11 @@ class Value:
 		return None, self.illegal_operation(other)
 	def subbed_by(self, other):
 		return None, self.illegal_operation(other)
-	def multed_by(self, other):
+	def mult_by(self, other):
 		return None, self.illegal_operation(other)
-	def dived_by(self, other):
+	def div_by(self, other):
 		return None, self.illegal_operation(other)
-	def powed_by(self, other):
+	def pow_by(self, other):
 		return None, self.illegal_operation(other)
 	def get_comparison_eq(self, other):
 		return None, self.illegal_operation(other)
@@ -68,12 +68,12 @@ class Number(Value):
 			return Number(self.value - other.value).set_context(self.context), None
 		else:
 			return None, Value.illegal_operation(self, other)
-	def multed_by(self, other):
+	def mult_by(self, other):
 		if isinstance(other, Number):
 			return Number(self.value * other.value).set_context(self.context), None
 		else:
 			return None, Value.illegal_operation(self, other)
-	def dived_by(self, other):
+	def div_by(self, other):
 		if isinstance(other, Number):
 			if other.value == 0:
 				return None, RTError(
@@ -84,7 +84,7 @@ class Number(Value):
 			return Number(self.value / other.value).set_context(self.context), None
 		else:
 			return None, Value.illegal_operation(self, other)
-	def powed_by(self, other):
+	def pow_by(self, other):
 		if isinstance(other, Number):
 			return Number(self.value ** other.value).set_context(self.context), None
 		else:
